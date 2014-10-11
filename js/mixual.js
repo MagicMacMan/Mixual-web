@@ -1,10 +1,15 @@
 $(function() {
 
-    var Mix = function Mix(opts) {
+    var Spectrum = this.Canvas;
+
+    var Mix = this.Mix = function Mix(opts, canvasopts) {
 
         _.extend(this, opts);
 
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // create one canvas
+        this.canvas = new Spectrum(_.extend(canvasopts, { el : '#canvas1' }));
 
         this.fftBuffers = [];
         this.sources = [];
@@ -13,11 +18,13 @@ $(function() {
         this.snapshots = [ [], [] ]; // two bins of snapshots
         this.recording = false;
 
-        this.fftSize = 1024;
+        this.fftSize = 2048;
 
         this.ready = false;
 
         this.load();
+
+        this.connections = [];
 
     };
 
@@ -166,7 +173,7 @@ $(function() {
 
     Mix.prototype.refreshBuffers = function () {
         this.analysers[0].getFloatFrequencyData(this.fftBuffers[0]);
-        this.analysers[1].getFloatFrequencyData(this.fftBuffers[1]);
+        //this.analysers[1].getFloatFrequencyData(this.fftBuffers[1]);
     };
 
     Mix.prototype.play = function() {
@@ -179,28 +186,29 @@ $(function() {
         this.plot(Date.now());
     };
 
+    // publish data to connections
+    Mix.prototype.publish = function() {
+
+        if (!this.fps) requestAnimationFrame(this.publish.bind(this));
+
+        this.refreshBuffers();
+
+        for (var i = 0; i < this.connections.length; i++) {
+            this.connections[i].render(this.fftBuffers[i]);
+        }
+    };
+
+    // connect a canvas that is given bufferdata on each iteration
+    Mix.prototype.connect = function(canvas) {
+        this.connections.push(canvas);
+        if (this.connections.length === 1) this.publish();
+
+        console.log('connected.');
+    };
+
     Mix.prototype.getFrequencyFromBin = function(n) {
         return n * this.ctx.sampleRate / this.fftSize;
     };
 
-    var options = {
-        songs: [
-            'sounds/mix4/song1.wav',
-            'sounds/mix4/song2.wav'
-        ],
-
-        mix: 'sounds/mix4/mix.wav',
-
-        // leave undefined for requestAnimationFrame
-        //fps: 20, // recording fps for snapshots
-
-        el: '#plot'
-    };
-
-    var app = new Mix(options);
-
-    window.addEventListener('click', function() {
-        app.play_and_plot();
-    });
 
 }.call(this));

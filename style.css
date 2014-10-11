@@ -3,6 +3,12 @@ body {
     position: relative;
 }
 
+.container {
+    max-width: 50%;
+    margin: 0 auto;
+    text-align: center;
+}
+
 #plot {
     height: 600px;
     width: 800px;
@@ -10,7 +16,5 @@ body {
 
 canvas {
     position: relative;
-    margin : 120px;
-    width: 480px;
-    height: 360px;
+    margin : 120px auto;
 }
