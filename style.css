@@ -1,0 +1,16 @@
+body {
+    background: #ECD078;
+    position: relative;
+}
+
+#plot {
+    height: 600px;
+    width: 800px;
+}
+
+canvas {
+    position: relative;
+    margin : 120px;
+    width: 480px;
+    height: 360px;
+}
