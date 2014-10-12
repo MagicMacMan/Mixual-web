@@ -20,13 +20,20 @@ $(function() {
         var min = 0;
         var max = 0;
 
-        if (datas[0].length > datas[1].length) min = 1;
+        if (!datas[0]) l0 = 0;
+        else l0 = datas[0].length;
+
+        if (!datas[1]) l1 = 0;
+        else l1 = datas[1].length;
+
+
+        if (l0 - l1) min = 1;
         if (!min) max = 1;
 
         var sign = !max ? 1 : -1; // max = 0 is positive direction
 
         for (var i = 0; i < datas[max].length; i++) {
-            if (i >= datas[min].length) data.push(datas[max][i]);
+            if (i >= l0 || i >= l1) data.push(datas[max][i]);
             else data.push(datas[0][i] - datas[1][i]);
         }
 
