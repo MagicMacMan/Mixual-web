@@ -56,44 +56,27 @@
 
             var app = new Mix(options, canvasoptions);
 
-            $('#select1').on('change', function() {
+            function cbFactory(i) {
+                var canvas = 0;
+                if (!i) canvas = 1;
 
-                this.style.display = 'none';
+                return function() {
+                    this.style.display = 'none';
 
-                var files = this.files;
-                var audio = $('#audio1')[0];
-                audio.src = URL.createObjectURL(files[0]);
+                    var files = this.files;
+                    var audio = $('#audio' + i)[0];
 
-                audio.classList.toggle('hidden', false);
+                    audio.src = URL.createObjectURL(files[0]);
 
-                app.streamIn(0, audio);
-            });
+                    audio.classList.toggle('hidden', false);
 
-            $('#select2').on('change', function() {
+                    app.streamIn(canvas, audio);
+                };
+            }
 
-                this.style.display = 'none';
-
-                var files = this.files;
-                var audio = $('#audio2')[0];
-                audio.src = URL.createObjectURL(files[0]);
-
-                audio.classList.toggle('hidden', false);
-
-                app.streamIn(1, audio);
-            });
-
-            $('#select3').on('change', function() {
-
-                this.style.display = 'none';
-
-                var files = this.files;
-                var audio = $('#audio3')[0];
-                audio.src = URL.createObjectURL(files[0]);
-
-                audio.classList.toggle('hidden', false);
-
-                app.streamIn(1, audio);
-            });
+            for (var i = 1; i <= 3; i++) {
+                $('#select' + i).on('change', cbFactory(i));
+            }
 
         </script>
     </body>
