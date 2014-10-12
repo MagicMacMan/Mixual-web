@@ -5,7 +5,9 @@ $(function() {
     var DiffSpect = this.DiffSpect = function(opts) {
         Canvas.call(this, opts);
 
-        this.MAX_AMP = 130;
+        this.MAX_AMP = 160;
+
+        this.nLevels /= 2;
     }
 
     DiffSpect.prototype = Object.create(this.Canvas.prototype);
@@ -15,9 +17,17 @@ $(function() {
         // suppose datas of length 2
 
         var data = [];
+        var min = 0;
+        var max = 0;
 
-        for (var i = 0; i < _.min([data1.length, data2.length]); i++) {
-            data.push(datas[0][i] - datas[1][i]);
+        if (datas[0].length > datas[1].length) min = 1;
+        if (!min) max = 1;
+
+        var sign = !max ? 1 : -1; // max = 0 is positive direction
+
+        for (var i = 0; i < datas[max].length; i++) {
+            if (i >= datas[min].length) data.push(datas[max][i]);
+            else data.push(datas[0][i] - datas[1][i]);
         }
 
         Canvas.prototype.render.call(this, data);
@@ -30,7 +40,7 @@ $(function() {
             if (amp > 0) amp = this.MAX_AMP;
             else amp = -this.MAX_AMP;
         }
-        var nLevels = Math.floor((this.nLevels/2) * Math.abs(amp) / this.MAX_AMP);
+        var nLevels = Math.floor((this.nLevels) * Math.abs(amp) / this.MAX_AMP);
 
         var sign = amp > 0 ? 1 : -1;
 

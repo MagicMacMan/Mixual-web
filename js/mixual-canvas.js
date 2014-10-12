@@ -15,7 +15,7 @@ $(function() {
     var Canvas = this.Canvas = function(opts) {
 
         this.MAX_AMP = 200;
-        this.nLevels = 12;
+        this.nLevels = 24;
 
         _.extend(this, opts);
 
