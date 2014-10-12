@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Mixual</title>
+
+        <link rel="stylesheet" href="style.css">
+
+        <script src="js/jquery-2.1.1.min.js" type="text/javascript"></script>
+        <script src="js/jquery.flot.js" type="text/javascript"></script>
+        <script src="js/lodash.underscore.js" type="text/javascript"></script>
+
+        <script src="js/mixual-canvas.js" type="text/javascript"></script>
+        <script src="js/mixual-disjoint.js" type="text/javascript"></script>
+        <script src="js/mixual.js" type="text/javascript"></script>
+    </head>
+    <body>
+
+        <div class='container'>
+            <canvas id='canvas1'></canvas>
+            <input id='select1' type='file' accept="audio/*" >
+            <audio id='audio1' class='hidden' controls> </audio>
+        </div>
+
+        <div class='container'>
+            <canvas id='canvas2'></canvas>
+            <input id='select2' type="file" accept="audio/*" >
+            <input id='select3' type="file" accept="audio/*" >
+
+            <audio id='audio2' > </audio>
+            <audio id='audio3'> </audio>
+        </div>
+
+        <script>
+
+            var canvasoptions = {
+                lowColor: "#542437",
+                midColor: "#C02942",
+                highColor: "#D95B43",
+                hangingMaxColor: "#53777A",
+                hangTime: 60,
+
+                    nBins: 32,
+                    wMargin: 5,
+                    hMargin: 3,
+
+                    width: 480,
+                    height: 300
+
+            };
+
+            var options = {
+
+                // leave undefined for requestAnimationFrame
+                //fps: 20, // recording fps for snapshots
+            };
+
+            var app = new Mix(options, canvasoptions);
+
+            $('#select1').on('change', function() {
+
+                this.style.display = 'none';
+
+                var files = this.files;
+                var audio = $('#audio1')[0];
+                audio.src = URL.createObjectURL(files[0]);
+
+                audio.classList.toggle('hidden', false);
+
+                app.streamIn(0, audio);
+            });
+
+            $('#select2').on('change', function() {
+                var files = this.files;
+                var audio = $('#audio2')[0];
+                audio.src = URL.createObjectURL(files[0]);
+
+                app.streamIn(1, audio);
+            });
+
+            $('#select3').on('change', function() {
+                var files = this.files;
+                var audio = $('#audio3');
+                audio.src = URL.createObjectURL(files[0]);
+
+                app.streamIn(1, audio[0]);
+            });
+
+        </script>
+    </body>
+</html>
