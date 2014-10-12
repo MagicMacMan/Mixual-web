@@ -58,7 +58,7 @@
 
             function cbFactory(i) {
                 var canvas = 0;
-                if (!i) canvas = 1;
+                if (i !== 1) canvas = 1;
 
                 return function() {
                     this.style.display = 'none';
