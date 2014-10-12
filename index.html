@@ -26,8 +26,8 @@
             <input id='select2' type="file" accept="audio/*" >
             <input id='select3' type="file" accept="audio/*" >
 
-            <audio id='audio2' > </audio>
-            <audio id='audio3'> </audio>
+            <audio id='audio2' class='hidden' controls> </audio>
+            <audio id='audio3' class='hidden' controls> </audio>
         </div>
 
         <script>
@@ -39,12 +39,12 @@
                 hangingMaxColor: "#53777A",
                 hangTime: 60,
 
-                    nBins: 32,
+                    nBins: 64,
                     wMargin: 5,
                     hMargin: 3,
 
-                    width: 480,
-                    height: 300
+                    width: 600,
+                    height: 400
 
             };
 
@@ -70,19 +70,29 @@
             });
 
             $('#select2').on('change', function() {
+
+                this.style.display = 'none';
+
                 var files = this.files;
                 var audio = $('#audio2')[0];
                 audio.src = URL.createObjectURL(files[0]);
+
+                audio.classList.toggle('hidden', false);
 
                 app.streamIn(1, audio);
             });
 
             $('#select3').on('change', function() {
+
+                this.style.display = 'none';
+
                 var files = this.files;
-                var audio = $('#audio3');
+                var audio = $('#audio3')[0];
                 audio.src = URL.createObjectURL(files[0]);
 
-                app.streamIn(1, audio[0]);
+                audio.classList.toggle('hidden', false);
+
+                app.streamIn(1, audio);
             });
 
         </script>
