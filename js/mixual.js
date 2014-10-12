@@ -3,48 +3,36 @@ $(function() {
     var Spectrum = this.Canvas;
     var DiffSpect = this.DiffSpect;
 
+    var Media = this.Media = function() {};
+
+
+    Media.prototype.update = function() {
+        this.analyser.getByteFrequencyData(this.buffer);
+    };
+
     var Mix = this.Mix = function Mix(opts, canvasopts) {
 
         _.extend(this, opts);
 
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // create canvases
-        this.leftcanvas = new Spectrum(_.extend(canvasopts, { el : '#canvas1' }));
-        this.rightcanvas = new Spectrum(_.extend(canvasopts, { el : '#canvas2' }));
-
         // create mix canvases
-        this.mixone = new Spectrum(_.extend(canvasopts, { el : '#canvas3' }));
-        this.mixtwo = new DiffSpect(_.extend(canvasopts, { el : '#canvas4' }));
+        this.mixone = new Spectrum(_.extend(canvasopts, { el : '#canvas1' }));
+        this.mixtwo = new DiffSpect(_.extend(canvasopts, { el : '#canvas2' }));
 
-        this.bindCanvasEvents();
-
-        this.fftBuffers = [];
-        this.sources = [];
-        this.analysers = [];
+        this.medias = [];
 
         this.snapshots = [ [], [] ]; // two bins of snapshots
         this.recording = false;
 
         this.fftSize = 2048;
 
-        this.ready = false;
-
-        this.load( function(self) {
-            self.leftcanvas.renderPlayButton();
-            self.rightcanvas.renderPlayButton();
-
-            self.mixone.renderPlayButton();
-            self.mixtwo.renderPlayButton();
-        });
-
-        this.connections = [];
-        this.playing = [false, false];
-
     };
 
     Mix.prototype.load = function(callback) {
         var self = this;
+
+        if (!this.songs) return;
 
         _.each(this.songs , function(file) {
             var request = new XMLHttpRequest();
@@ -56,6 +44,7 @@ $(function() {
                 self.ctx.decodeAudioData(request.response, function(buffer) {
                     console.log('success.');
 
+                    // needs a rewrite to work with this.medias object
                     var source = self.ctx.createBufferSource();
                     source.buffer = buffer;
                     self.sources.push(source);
@@ -85,6 +74,26 @@ $(function() {
 
             request.send();
         });
+    };
+
+    Mix.prototype.streamIn = function(canvas, stream) {
+        var media = new Media();
+
+        media.canvas = canvas;
+        media.stream = stream;
+
+        media.source = this.ctx.createMediaElementSource(stream);
+        media.analyser = this.ctx.createAnalyser();
+
+        media.source.connect(media.analyser);
+        media.analyser.connect(this.ctx.destination);
+
+        media.buffer = new Uint8Array(media.analyser.frequencyBinCount);
+
+        media.stream.addEventListener('play', _.partial(this.feed, canvas).bind(this));
+
+        this.medias.push(media);
+
     };
 
     Mix.prototype.plotFrequencies = function(time) {
@@ -188,149 +197,27 @@ $(function() {
         this.snapshots[1].push(this.analyser[1].getByteFrequencyData(new Uint8Array(this.fftSize)));
     };
 
-    Mix.prototype.refreshBuffers = function () {
-        this.analysers[0].getByteFrequencyData(this.fftBuffers[0]);
-        this.analysers[1].getByteFrequencyData(this.fftBuffers[1]);
-        this.analysers[2].getByteFrequencyData(this.fftBuffers[2]);
-    };
-
-    Mix.prototype.play = function() {
-        _.each(this.sources, function(src) { src.start(); });
-    };
-
-    Mix.prototype.play_and_plot = function() {
-        this.play();
-        this.plot(Date.now());
-    };
-
-    // publish data to connections
-    Mix.prototype.publish = function() {
-
-        if (!this.fps && this.connections.length > 0) requestAnimationFrame(this.publish.bind(this));
-
-        this.refreshBuffers();
-
-        for (var i = 0; i < this.connections.length; i++) {
-            if (typeof this.connections[i][0] === 'number') {
-                this.connections[i][1].render(this.fftBuffers[this.connections[i][0]]);
-            } // its an array
-            else {
-                this.connections[i][1].render(this.fftBuffers[this.connections[i][0][0]], this.fftBuffers[this.connections[i][0][1]]); // i know it's two
-            }
-        }
-    };
-
-    // connect a canvas that is given bufferdata on each iteration
-    Mix.prototype.connect = function(idx, canvas) {
-        this.connections.push([idx, canvas]);
-        if (this.connections.length === 1) this.publish();
-
-    };
-
     Mix.prototype.getFrequencyFromBin = function(n) {
         return n * this.ctx.sampleRate / this.fftSize;
     };
 
-    Mix.prototype.stop = function(idx, stopped) {
+    // feed analyser nodes to canvas
+    Mix.prototype.feed = function(canvas) {
 
-        if (!stopped) this.sources[idx].stop();
+        if (!this.fps) requestAnimationFrame(_.partial(this.feed, canvas).bind(this));
 
-        this.playing[idx] = false;
+        var data = [];
 
-        // create a new sourcebuffernode to replace the old
-        var source = this.ctx.createBufferSource();
-        source.buffer = this.sources[idx].buffer;
-        this.sources[idx] = source;
+        var plucked = _.where(this.medias, { canvas : canvas });
 
-        source.connect(this.analysers[idx]);
-        source.connect(this.ctx.destination);
-
-        var connection = _.find(this.connections, function(connection) {
-            return connection[0] === idx;
+        _.each(plucked, function(media) {
+            media.update();
+            data.push(media.buffer);
         });
 
-        // remove connection
-        this.connections[this.connections.indexOf(connection)] = _.last(this.connections);
-        this.connections.pop();
+        if (canvas === 0) this.mixone.render(data[0]);
+        else if (canvas === 1) this.mixtwo.render(data);
 
-        this.bindCanvasEvents(idx);
-
-        if (idx === 0) this.leftcanvas.renderPlayButton();
-        else if (idx === 1) this.rightcanvas.renderPlayButton();
-        else if (idx === 2) this.mixone.renderPlayButton();
-        else if (idx === 3) this.mixtwo.renderPlayButton();
     };
-
-
-    Mix.prototype.bindCanvasEvents = function(idx) {
-
-        var self = this;
-
-        if (!idx || idx === 0) {
-
-            this.leftcanvas.$el.on('click', function() {
-                if (!self.playing[0]) {
-                    self.sources[0].start();
-                    self.playing[0] = true;
-                    self.connect(0, self.leftcanvas);
-                }
-                else {
-                    self.stop(0);
-                }
-            });
-
-        }
-
-        if (!idx || idx === 1) {
-
-            this.rightcanvas.$el.on('click', function() {
-                if (!self.playing[1]) {
-                    self.sources[1].start();
-                    self.playing[1] = true;
-                    self.connect(1, self.rightcanvas);
-                }
-                else {
-                    self.stop(1);
-                }
-            });
-
-        }
-
-        if (!idx || idx === 2) {
-
-            this.mixone.$el.on('click', function() {
-                if (!self.playing[2]) {
-                    self.sources[2].start();
-                    self.playing[2] = true;
-                    self.connect(2, self.mixone);
-                }
-                else {
-                    self.stop(2);
-                }
-            });
-
-        }
-
-        if (!idx || idx === 3) {
-
-            this.mixtwo.$el.on('click', function() {
-                if (!self.playing[3]) {
-                    self.sources[0].start();
-                    self.sources[1].start();
-
-                    self.playing[0] = true;
-                    self.playing[1] = true;
-
-                    self.connect([0, 1], self.mixtwo);
-                }
-                else {
-                    self.stop(0);
-                    self.stop(1);
-                }
-            });
-
-        }
-    };
-
 
 }.call(this));

@@ -20,3 +20,7 @@ canvas {
     position: relative;
     margin : 120px auto;
 }
+ 
+.hidden {
+    display: none;
+}

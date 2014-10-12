@@ -5,17 +5,19 @@ $(function() {
     var DiffSpect = this.DiffSpect = function(opts) {
         Canvas.call(this, opts);
 
-        this.MAX_AMP = 100;
+        this.MAX_AMP = 130;
     }
 
     DiffSpect.prototype = Object.create(this.Canvas.prototype);
 
-    DiffSpect.prototype.render = function(data1, data2) {
+    DiffSpect.prototype.render = function(datas) {
+
+        // suppose datas of length 2
 
         var data = [];
 
         for (var i = 0; i < _.min([data1.length, data2.length]); i++) {
-            data.push(data1[i] - data2[i]);
+            data.push(datas[0][i] - datas[1][i]);
         }
 
         Canvas.prototype.render.call(this, data);

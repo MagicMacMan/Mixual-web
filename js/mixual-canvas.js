@@ -63,14 +63,14 @@ $(function() {
         var sum = data[0];
         for (var n = 1; n < data.length; n++) {
             if (n % binSize === 0) {
-                this.drawLevels(n / binSize - 1, sum / binSize);
+                this.drawLevels((n / binSize) - 1, sum / binSize);
                 sum = data[n];
             }
 
             sum += data[n];
         }
 
-        this.drawLevels( binSize - 1, -sum / binSize);
+        this.drawLevels( this.nBins - 1, -sum / binSize);
 
     };
 

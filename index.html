@@ -17,20 +17,18 @@
 
         <div class='container'>
             <canvas id='canvas1'></canvas>
+            <input id='select1' type='file' accept="audio/*" >
+            <audio id='audio1' class='hidden' controls> </audio>
         </div>
 
         <div class='container'>
             <canvas id='canvas2'></canvas>
-        </div>
+            <input id='select2' type="file" accept="audio/*" >
+            <input id='select3' type="file" accept="audio/*" >
 
-        <div class='container'>
-            <canvas id='canvas3'></canvas>
+            <audio id='audio2' > </audio>
+            <audio id='audio3'> </audio>
         </div>
-
-        <div class='container'>
-            <canvas id='canvas4'></canvas>
-        </div>
-
 
         <script>
 
@@ -51,19 +49,41 @@
             };
 
             var options = {
-                songs: [
-                    'sounds/mix4/song1.wav',
-                    'sounds/mix4/song2.wav',
-                    'sounds/mix4/mix.wav'
-                ],
 
                 // leave undefined for requestAnimationFrame
                 //fps: 20, // recording fps for snapshots
-
-                el: '#plot'
             };
 
             var app = new Mix(options, canvasoptions);
+
+            $('#select1').on('change', function() {
+
+                this.style.display = 'none';
+
+                var files = this.files;
+                var audio = $('#audio1')[0];
+                audio.src = URL.createObjectURL(files[0]);
+
+                audio.classList.toggle('hidden', false);
+
+                app.streamIn(0, audio);
+            });
+
+            $('#select2').on('change', function() {
+                var files = this.files;
+                var audio = $('#audio2')[0];
+                audio.src = URL.createObjectURL(files[0]);
+
+                app.streamIn(1, audio);
+            });
+
+            $('#select3').on('change', function() {
+                var files = this.files;
+                var audio = $('#audio3');
+                audio.src = URL.createObjectURL(files[0]);
+
+                app.streamIn(1, audio[0]);
+            });
 
         </script>
     </body>
